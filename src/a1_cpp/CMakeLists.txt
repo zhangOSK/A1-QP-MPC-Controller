@@ -85,13 +85,13 @@ target_link_libraries(gazebo_a1_lib a1_lib)
 target_link_libraries(isaac_a1_lib a1_lib)
 target_link_libraries(hardware_a1_lib a1_lib ${EXTRA_LIBS})
 
-# Declare a cpp executable for isaac robot
-add_executable(isaac_a1_ctrl src/MainIsaac.cpp)
-target_link_libraries(isaac_a1_ctrl
-        isaac_a1_lib
-        ${catkin_LIBRARIES}
-        OsqpEigen::OsqpEigen
-        )
+# # Declare a cpp executable for isaac robot
+# add_executable(isaac_a1_ctrl src/MainIsaac.cpp)
+# target_link_libraries(isaac_a1_ctrl
+#         isaac_a1_lib
+#         ${catkin_LIBRARIES}
+#         OsqpEigen::OsqpEigen
+#         )
 
 # Declare a cpp executable for gazebo robot
 add_executable(gazebo_a1_ctrl src/MainGazebo.cpp)
@@ -132,4 +132,9 @@ target_link_libraries(test_mpc
 add_executable(test_unitree_legged_msgs src/test/test_unitree_msgs.cpp)
 target_link_libraries(test_unitree_legged_msgs
         ${catkin_LIBRARIES}
+        )
+
+add_executable(test_oneleg src/test/test_oneleg.cpp
+        src/utils/Utils.cpp
+        src/utils/Utils.h
         )
