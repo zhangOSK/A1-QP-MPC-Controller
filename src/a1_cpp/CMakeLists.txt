@@ -137,4 +137,5 @@ target_link_libraries(test_unitree_legged_msgs
 add_executable(test_oneleg src/test/test_oneleg.cpp
         src/utils/Utils.cpp
         src/utils/Utils.h
+        src/legKinematics/A1Kinematics.cpp
         )
