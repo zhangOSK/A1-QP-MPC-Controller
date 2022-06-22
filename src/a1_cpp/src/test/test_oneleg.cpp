@@ -4,20 +4,20 @@ TestOneLeg::TestOneLeg() {
     std::cout << "init TestOneLeg" << std::endl;
     // the leg kinematics is relative to body frame, which is the center of the robot
     // leg order: 0-FL  1-FR  2-RL  3-RR
-    leg_offset_x[0] = 0.1805;
-    leg_offset_x[1] = 0.1805;
-    leg_offset_x[2] = -0.1805;
-    leg_offset_x[3] = -0.1805;
+    leg_offset_x[0] = 0.1805 + 0.1;
+    leg_offset_x[1] = 0.1805 + 0.1;
+    leg_offset_x[2] = -0.1805 + 0.1;
+    leg_offset_x[3] = -0.1805 + 0.1;
     leg_offset_y[0] = 0.047;
     leg_offset_y[1] = -0.047;
     leg_offset_y[2] = 0.047;
     leg_offset_y[3] = -0.047;
-    motor_offset[0] = 0.0838;
-    motor_offset[1] = -0.0838;
-    motor_offset[2] = 0.0838;
-    motor_offset[3] = -0.0838;
-    upper_leg_length[0] = upper_leg_length[1] = upper_leg_length[2] = upper_leg_length[3] = 0.20;
-    lower_leg_length[0] = lower_leg_length[1] = lower_leg_length[2] = lower_leg_length[3] = 0.20;
+    motor_offset[0] = 0.0838 + 0.05;
+    motor_offset[1] = -0.0838 + 0.05;
+    motor_offset[2] = 0.0838 + 0.05;
+    motor_offset[3] = -0.0838 + 0.05;
+    upper_leg_length[0] = upper_leg_length[1] = upper_leg_length[2] = upper_leg_length[3] = 0.35;
+    lower_leg_length[0] = lower_leg_length[1] = lower_leg_length[2] = lower_leg_length[3] = 0.39;
 
     for (int i = 0; i < NUM_LEG; i++) {
         Eigen::VectorXd rho_fix(5);
@@ -38,7 +38,6 @@ int main(int, char**) {
     TestOneLeg oneleg;
     A1CtrlStates state;
     A1Kinematics a1_kin;
-    std::cout<< "a1_kin, rho_opt_size = "<<a1_kin.RHO_OPT_SIZE <<std::endl;
     // init values
     state.reset(); // 0, 1, 2, 3: FL, FR, RL, RR
     state.robot_mass = 20; //note 1
@@ -48,7 +47,6 @@ int main(int, char**) {
     state.root_euler << 0.0, 0.0, 0.0;
 
     double dt = 0.01; // TODO: update dt = ros::Time::now - pre
-    // BezierUtils bezierUtils[NUM_LEG];
 
     Eigen::Matrix<double, 3, NUM_LEG> foot_pos_cur;
     Eigen::Matrix<double, 3, NUM_LEG> foot_vel_cur;
@@ -86,11 +84,10 @@ int main(int, char**) {
     std::cout<<interp_pos_rst.col(45)<<std::endl;
 
     for (int t = 0; t < 50; t++){
-        // !!! TODO: READ q FROM MOTOR
         for (int i = 0; i < NUM_LEG; ++i) {
             if (i == 0) {  
-                // DO forward kinematics to get foot pos
-                // after getting q, calculate current foot pos and update jac     
+                // !!! TODO: READ q FROM MOTOR
+                // calculate current foot pos and update jac     
                 state.foot_pos_rel.block<3, 1>(0, i) = a1_kin.fk(
                         state.joint_pos.segment<3>(3 * i),
                         oneleg.rho_opt_list[i], oneleg.rho_fix_list[i]);  // foot pos in robot frame  ! undefined reference: add A1Kinematics.cpp in cmakelist. 
@@ -101,11 +98,11 @@ int main(int, char**) {
 
                 // foot_pos_cur.block<3, 1>(0, i) = state.root_rot_mat_z.transpose() * state.foot_pos_abs.block<3, 1>(0, i); // robot frame 
                 std::cout<< "t = " << t << std::endl;
-                // std::cout<< ", cur, " << foot_pos_cur.col(0) << std::endl;
                 
                 foot_vel_cur.block<3, 1>(0, i) = (foot_pos_cur.block<3, 1>(0, i) - foot_pos_rel_last_time.block<3, 1>(0, i)) / dt;
                 foot_pos_rel_last_time.block<3, 1>(0, i) = foot_pos_cur.block<3, 1>(0, i);
 
+                foot_pos_target.block<3, 1>(0, i) = interp_pos_rst.col(t); // !!! select frequency
                 foot_vel_target.block<3, 1>(0, i) = (foot_pos_target.block<3, 1>(0, i) - foot_pos_target_last_time.block<3, 1>(0, i)) / dt;
                 foot_pos_target_last_time.block<3, 1>(0, i) = foot_pos_target.block<3, 1>(0, i);
 
