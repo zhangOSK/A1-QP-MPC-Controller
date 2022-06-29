@@ -380,29 +380,59 @@ void GazeboA1ROS::RR_foot_contact_callback(const geometry_msgs::WrenchStamped &f
     a1_ctrl_states.foot_force[3] = force.wrench.force.z;
 }
 
+// //--------------logicool joystick-------------------
+// void GazeboA1ROS::
+// joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
+//     // left updown
+//     joy_cmd_velz = joy_msg->axes[1] * JOY_CMD_BODY_HEIGHT_VEL;
+
+//     //A
+//     if (joy_msg->buttons[1] == 1) {
+//         joy_cmd_ctrl_state_change_request = true;
+//     }
+
+//     // right updown
+//     joy_cmd_velx = joy_msg->axes[3] * JOY_CMD_VELX_MAX;
+//     // right horiz
+//     joy_cmd_vely = joy_msg->axes[2] * JOY_CMD_VELY_MAX;
+//     // left horiz
+//     joy_cmd_yaw_rate = joy_msg->axes[4] * JOY_CMD_YAW_MAX;
+//     // up-down button
+//     joy_cmd_pitch_rate = joy_msg->axes[5] * JOY_CMD_PITCH_MAX;
+//     // left-right button
+//     joy_cmd_roll_rate = joy_msg->axes[0] * JOY_CMD_ROLL_MAX;
+
+//     // lb
+//     if (joy_msg->buttons[6] == 1) {
+//         std::cout << "You have pressed the exit button!!!!" << std::endl;
+//         joy_cmd_exit = true;
+//     }
+// }
+
+// ---------------BeiTong lefttop light on (x360 mode)-----------
 void GazeboA1ROS::
 joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
     // left updown
-    joy_cmd_velz = joy_msg->axes[1] * JOY_CMD_BODY_HEIGHT_VEL;
+    joy_cmd_velz = joy_msg->axes[7] * JOY_CMD_BODY_HEIGHT_VEL;
 
     //A
-    if (joy_msg->buttons[1] == 1) {
+    if (joy_msg->buttons[0] == 1) {
         joy_cmd_ctrl_state_change_request = true;
     }
 
     // right updown
-    joy_cmd_velx = joy_msg->axes[3] * JOY_CMD_VELX_MAX;
+    joy_cmd_velx = joy_msg->axes[4] * JOY_CMD_VELX_MAX;
     // right horiz
-    joy_cmd_vely = joy_msg->axes[2] * JOY_CMD_VELY_MAX;
+    joy_cmd_vely = joy_msg->axes[3] * JOY_CMD_VELY_MAX;
     // left horiz
-    joy_cmd_yaw_rate = joy_msg->axes[4] * JOY_CMD_YAW_MAX;
+    joy_cmd_yaw_rate = joy_msg->axes[0] * JOY_CMD_YAW_MAX;
     // up-down button
-    joy_cmd_pitch_rate = joy_msg->axes[5] * JOY_CMD_PITCH_MAX;
+    joy_cmd_pitch_rate = joy_msg->axes[1] * JOY_CMD_PITCH_MAX;
     // left-right button
-    joy_cmd_roll_rate = joy_msg->axes[0] * JOY_CMD_ROLL_MAX;
+    joy_cmd_roll_rate = joy_msg->axes[6] * JOY_CMD_ROLL_MAX;
 
     // lb
-    if (joy_msg->buttons[6] == 1) {
+    if (joy_msg->buttons[4] == 1) {
         std::cout << "You have pressed the exit button!!!!" << std::endl;
         joy_cmd_exit = true;
     }
