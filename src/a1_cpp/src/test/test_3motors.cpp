@@ -1,5 +1,4 @@
 #include "test_oneleg.h"
-//-------------------------------------------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -567,8 +566,8 @@ TestOneLeg::TestOneLeg() {
     motor_offset[1] = -0.0838;
     motor_offset[2] = 0.0838;
     motor_offset[3] = -0.0838;
-    upper_leg_length[0] = upper_leg_length[1] = upper_leg_length[2] = upper_leg_length[3] = 0.20;
-    lower_leg_length[0] = lower_leg_length[1] = lower_leg_length[2] = lower_leg_length[3] = 0.20;
+    upper_leg_length[0] = upper_leg_length[1] = upper_leg_length[2] = upper_leg_length[3] = 0.35;
+    lower_leg_length[0] = lower_leg_length[1] = lower_leg_length[2] = lower_leg_length[3] = 0.39;
 
     for (int i = 0; i < NUM_LEG; i++) {
         Eigen::VectorXd rho_fix(5);
@@ -597,48 +596,54 @@ int main(int, char**) {
     struct motor_data_t motor_data;
     struct motor_command_t motor_setting;
 
-    //初始化好扭矩，一只狗腿循环一次
+    //初始化扭矩，一只狗腿循环一次
     for (int i = 0; i < 1; i++)
     {
-        motor_setting.tau_abad[i] = 3;
-        motor_setting.tau_hip[i] = 3;
-        motor_setting.tau_knee[i] = 3;
+        motor_setting.tau_abad[i] = 0;
+        motor_setting.tau_hip[i] = 0;
+        motor_setting.tau_knee[i] = 0;
     }
 
 
-    //初始化CAN
-    ret = init_can_socket();
-    if(ret == 0) {
-        printf("CAN初始化成功, socket = %d\n", s);
-    }
-    else {
-        printf("CAN初始化失败, socket = %d\n", s);
-    }
+    // //初始化CAN
+    // ret = init_can_socket();
+    // if(ret == 0) {
+    //     printf("CAN初始化成功, socket = %d\n", s);
+    // }
+    // else {
+    //     printf("CAN初始化失败, socket = %d\n", s);
+    // }
 
-    // Get motor data
-    ret = motor_send_receive(&motor_setting, &motor_data);
+    // // Get motor data
+    // ret = motor_send_receive(&motor_setting, &motor_data);
 
-    usleep(1000);
-    std::cout<< "2nd r and send"<< std::endl;
-    ret = motor_send_receive(&motor_setting, &motor_data);
-    usleep(1000);
-    std::cout<< "3rd r and send"<< std::endl;
-    ret = motor_send_receive(&motor_setting, &motor_data);
+    // usleep(1000);
+    // std::cout<< "2nd r and send"<< std::endl;
+    // ret = motor_send_receive(&motor_setting, &motor_data);
+    // usleep(1000);
+    // std::cout<< "3rd r and send"<< std::endl;
+    // ret = motor_send_receive(&motor_setting, &motor_data);
 
     double q0;
     double q1;
     double q2;
-    q0 = (double) motor_data.q_abad[0];
-    q1 = (double) motor_data.q_hip[0];
-    q2 = (double) motor_data.q_knee[0];
-    Eigen::Vector3d qMotor(q0,q1,q2);
+    // q0 = (double) motor_data.q_abad[0];
+    // q1 = (double) motor_data.q_hip[0];
+    // q2 = (double) motor_data.q_knee[0];
+    // FL : 0.001, 0.679 (39deg), -1.625 (-93.1); foot pos: 0.277017, 0.1313, -0.50041; 
+    // FL : 0, 0, 0; foot pos: 0.1805, 0.1308, -0.74
+    // FR : -0.17, 0.656, -1.559 ; A1 foot pos: 0.27324, -0.217375, -0.497207
 
+    q0 = 0.001;
+    q1 = 0.679;
+    q2 = -1.625;
+    Eigen::Vector3d qMotor(q0,q1,q2);
 
 
     TestOneLeg oneleg;
     A1CtrlStates state;
     A1Kinematics a1_kin;
-    std::cout<< "a1_kin, rho_opt_size = "<<a1_kin.RHO_OPT_SIZE <<std::endl;
+    // std::cout<< "a1_kin, rho_opt_size = "<<a1_kin.RHO_OPT_SIZE <<std::endl;
     // init values
     state.reset(); // 0, 1, 2, 3: FL, FR, RL, RR
     state.robot_mass = 5; //note 1
@@ -671,21 +676,28 @@ int main(int, char**) {
     foot_forces_kin.setZero();
     joint_torques.setZero();
 
-    Eigen::Vector3d foot_pos_start(0.2,0.2,-0.33);  // TODO: re-check x,y,z to avoid un-desired collision 
-    Eigen::Vector3d foot_pos_final(0.25,0.2,-0.33);
+    Eigen::Vector3d foot_pos_start(0.277017, 0.1313, -0.50041);  // TODO: to begein with, track one certain pose, instead of bezier curve.
+    Eigen::Vector3d foot_pos_final(0.227017, 0.1313, -0.50041);
 
     BezierUtils bs_utils;
     int totalInterpolation = 50;
-    double sampT = 0.01;
     Eigen::MatrixXd interp_pos_rst(3,totalInterpolation);
     int ii = 0;
-    for (double t=0.0; t<totalInterpolation*sampT; t += sampT) {
+    double sampT = (double) 1/totalInterpolation;
+    for (double t=0.0; t<1; t += sampT) {
         interp_pos_rst.col(ii) = bs_utils.get_foot_pos_curve(t,foot_pos_start, 
         foot_pos_final,0);
         ii++;
     }
-    std::cout<<"position interpolation"<<std::endl;
-    std::cout<<interp_pos_rst.col(45)<<std::endl;
+    // std::cout<<"position interpolation"<<std::endl;
+    // std::cout<<interp_pos_rst.col(45)<<std::endl;
+
+    state.foot_pos_rel.block<3, 1>(0, 0) = a1_kin.fk(
+        qMotor,
+        oneleg.rho_opt_list[0], oneleg.rho_fix_list[0]);  // foot pos in robot frame  ! undefined reference: add A1Kinematics.cpp in cmakelist. 
+    foot_pos_cur.block<3, 1>(0, 0) = state.foot_pos_rel.col(0) ;
+    std::cout<<"qMotor"<<qMotor<<std::endl;
+    std::cout<< "!!!!cur foot pos= " << foot_pos_cur.block<3, 1>(0, 0) << std::endl;
 
     for (int t = 0; t < totalInterpolation; t++){
         // !!! TODO: READ q FROM MOTOR
@@ -704,6 +716,8 @@ int main(int, char**) {
                 // foot_pos_cur.block<3, 1>(0, i) = state.root_rot_mat_z.transpose() * state.foot_pos_abs.block<3, 1>(0, i); // robot frame 
                 std::cout<< "t = " << t << std::endl;
                 // std::cout<< ", cur, " << foot_pos_cur.col(0) << std::endl;
+
+                foot_pos_target.block<3, 1>(0, i) = interp_pos_rst.col(t);
                 
                 foot_vel_cur.block<3, 1>(0, i) = (foot_pos_cur.block<3, 1>(0, i) - foot_pos_rel_last_time.block<3, 1>(0, i)) / dt;
                 foot_pos_rel_last_time.block<3, 1>(0, i) = foot_pos_cur.block<3, 1>(0, i);
@@ -718,8 +732,8 @@ int main(int, char**) {
 
                 state.foot_pos_cur = foot_pos_cur;
                 state.foot_forces_kin = foot_forces_kin; // note 4
-
-                //!!!! UPDATE JACOBIAN state.j_foot
+                std::cout << "pos err= "<< foot_pos_error.block<3, 1>(0, i)[0]<< "," << foot_pos_error.block<3, 1>(0, i)[1]<<", "<<foot_pos_error.block<3, 1>(0, i)[2] << std::endl;
+                std::cout << "vel err= "<< foot_vel_error.block<3, 1>(0, i)[0]<< ", "<< foot_vel_error.block<3, 1>(0, i)[1] << ", "<< foot_vel_error.block<3, 1>(0, i)[2] << std::endl;
 
                 // compute torques
                 Eigen::Matrix3d jac = state.j_foot.block<3, 3>(3 * i, 3 * i);
@@ -728,20 +742,23 @@ int main(int, char**) {
             }
             joint_torques += state.torques_gravity;
 
-            std::cout << "cmd tau1,2,3= " << joint_torques[0] <<", " << joint_torques[1] << ", " << joint_torques[2]<< std::endl;
+            if (i==0){
+                std::cout << "cmd tau1,2,3= " << joint_torques[0] <<", " << joint_torques[1] << ", " << joint_torques[2]<< std::endl;
+            }
+            
 
-            motor_setting.tau_abad[0] = joint_torques[0]/10;
-            motor_setting.tau_hip[0] = joint_torques[1]/10;
-            motor_setting.tau_knee[0] = joint_torques[2]/10;
-            ret = motor_send_receive(&motor_setting, &motor_data);
+            // motor_setting.tau_abad[0] = joint_torques[0]/10;
+            // motor_setting.tau_hip[0] = joint_torques[1]/10;
+            // motor_setting.tau_knee[0] = joint_torques[2]/10;
+            // ret = motor_send_receive(&motor_setting, &motor_data);
 
-            q0 = (double) motor_data.q_abad[0];
-            q1 = (double) motor_data.q_hip[0];
-            q2 = (double) motor_data.q_knee[0];
-            qMotor(0) = q0;
-            qMotor(1) = q1;
-            qMotor(2) = q2;
-            std::cout<< "received q= " << qMotor(0) << ", " << qMotor(1) << ", "<< qMotor(2)<< std::endl;
+            // q0 = (double) motor_data.q_abad[0];
+            // q1 = (double) motor_data.q_hip[0];
+            // q2 = (double) motor_data.q_knee[0];
+            // qMotor(0) = q0;
+            // qMotor(1) = q1;
+            // qMotor(2) = q2;
+            // std::cout<< "received q= " << qMotor(0) << ", " << qMotor(1) << ", "<< qMotor(2)<< std::endl;
 
             // // prevent nan
             // for (int i = 0; i < 12; ++i) {
@@ -749,10 +766,11 @@ int main(int, char**) {
             //         state.joint_torques[i] = joint_torques[i];
             // }
 
-            usleep(10000);
+            usleep(1000);
 
         }
 
     }
 
 }
+

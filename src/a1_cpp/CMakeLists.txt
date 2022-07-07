@@ -139,3 +139,9 @@ add_executable(test_oneleg src/test/test_oneleg.cpp
         src/utils/Utils.h
         src/legKinematics/A1Kinematics.cpp
         )
+
+add_executable(test_3motors src/test/test_3motors.cpp
+        src/utils/Utils.cpp
+        src/utils/Utils.h
+        src/legKinematics/A1Kinematics.cpp
+        )
