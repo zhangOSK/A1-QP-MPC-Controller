@@ -190,6 +190,16 @@ bool GazeboA1ROS::main_update(double t, double dt) {
     _root_control.update_plan(a1_ctrl_states, dt);
     _root_control.generate_swing_legs_ctrl(a1_ctrl_states, dt);
 
+    // print motor q and torque --- by ang
+    std::cout << "------------------motor info---------------------" << std::endl;
+    for (int j = 0; j < 12; j++)
+    {
+        std::cout << j << "q=" << a1_ctrl_states.joint_pos[j] << "; ";
+        if (j == 11){
+            std::cout << std::endl;
+        }
+    }
+
     // state estimation
     if (!a1_estimate.is_inited()) {
         a1_estimate.init_state(a1_ctrl_states);
@@ -227,6 +237,16 @@ bool GazeboA1ROS::send_cmd() {
         low_cmd.motorCmd[i].tau = a1_ctrl_states.joint_torques(i, 0);
         pub_joint_cmd[i].publish(low_cmd.motorCmd[i]);
     }
+
+    // print tau ---by ang
+    for (int j = 0; j < 12; j++)
+    {
+        std::cout << j << "tau=" << a1_ctrl_states.joint_torques(j, 0) << ", ";
+        if (j == 11){
+            std::cout << std::endl;
+        }
+    }
+    
 
     return true;
 }
